@@ -10,14 +10,18 @@ use App\Http\Controllers\MappingController;
 |--------------------------------------------------------------------------
 */
 
-// Middleware 'auth:sanctum' akan memastikan bahwa hanya user yang sudah login
-// (dan memiliki token yang valid atau sesi cookie) yang bisa mengakses route di dalam grup ini.
-Route::middleware('auth:sanctum')->group(function () {
+// PERBAIKAN: Gunakan web middleware untuk SPA, bukan auth:sanctum
+Route::middleware(['web', 'auth'])->group(function () {
     
     // Route untuk Vue mengambil daftar mapping
-    Route::get('/mappings', [MappingController::class, 'getMappings']);
+    Route::get('/mappings', [MappingController::class, 'index']);
 
-    // Route untuk Vue mengirim file upload
-    Route::post('/upload', [MappingController::class, 'handleUpload']);
+    // Route untuk membuat mapping baru
+    Route::post('/mappings', [MappingController::class, 'store']);
+
+    // Route untuk Vue mengirim file upload (belum ada, perlu dibuat)
+    Route::post('/upload', function() {
+        return response()->json(['message' => 'Upload endpoint - coming soon']);
+    });
 
 });

@@ -95,4 +95,15 @@ class MappingController extends Controller
 
         return response()->json(null, 204);
     }
+    public function getUserPermissions()
+{
+    $user = Auth::user();
+    
+    return response()->json([
+        'can_create_mapping' => $user->can('create mapping'),
+        'can_register_format' => $user->can('register format'),
+        'can_upload_data' => $user->can('upload data'),
+        'is_super_admin' => $user->hasRole('super-admin'),
+    ]);
+}
 }
