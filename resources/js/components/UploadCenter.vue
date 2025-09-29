@@ -3,7 +3,19 @@
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card">
-                    <div class="card-header">Upload Center (Vue Version)</div>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        Upload Center (Vue Version)
+                        
+                        {{-- TOMBOL CREATE MAPPING --}}
+                        <button
+                            v-if="canCreateMapping"
+                            class="btn btn-sm btn-primary"
+                            @click="showMappingModal = true" {{-- Ganti dengan aksi yang sesuai --}}
+                        >
+                            Create Mapping
+                        </button>
+
+                    </div>
                     <div class="card-body">
 
                         <div v-if="successMessage" class="alert alert-success">{{ successMessage }}</div>
@@ -76,10 +88,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, defineProps } from 'vue'; // <-- Import defineProps
 import axios from 'axios';
 import * as XLSX from 'xlsx';
-import { Modal } from 'bootstrap'; // <-- 1. TAMBAHKAN IMPORT INI
+import { Modal } from 'bootstrap';
+
+// MENERIMA PROPS DARI BLADE
+const props = defineProps({
+  canCreateMapping: {
+    type: Boolean,
+    default: false
+  }
+});
 
 // State Management
 const mappings = ref([]);
@@ -92,8 +112,9 @@ const isLoading = ref(false);
 const successMessage = ref('');
 const errorMessage = ref('');
 let modalInstance = null;
+const showMappingModal = ref(false); // State untuk modal create mapping
 
-// Fetch initial mapping data from Laravel backend when component is loaded
+// Fetch initial mapping data
 onMounted(async () => {
     try {
         const response = await axios.get('/api/mappings');
@@ -102,15 +123,12 @@ onMounted(async () => {
         errorMessage.value = 'Failed to load mapping formats.';
     }
 
-    // Inisialisasi modal bootstrap
     const modalEl = document.getElementById('previewModal');
     if (modalEl) {
-        // 2. UBAH DARI 'new bootstrap.Modal' MENJADI 'new Modal'
         modalInstance = new Modal(modalEl, { keyboard: false, backdrop: 'static' });
     }
 });
 
-// ... sisa semua fungsi Anda (availableDbColumns, handleFileChange, dll.) tetap sama persis ...
 const availableDbColumns = computed(() => {
     if (!selectedMappingCode.value || !mappings.value.length) return [];
     const selected = mappings.value.find(m => m.code === selectedMappingCode.value);
@@ -169,9 +187,7 @@ async function confirmImport() {
 
     try {
         const response = await axios.post('/api/upload', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
+            headers: { 'Content-Type': 'multipart/form-data' }
         });
         successMessage.value = response.data.message;
     } catch (error) {

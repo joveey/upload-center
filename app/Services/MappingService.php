@@ -3,56 +3,59 @@
 namespace App\Services;
 
 use App\Models\MappingIndex;
+use App\Models\MappingColumn; // <-- 1. Import MappingColumn
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Arr;
 
 class MappingService
 {
-    public function processUpload($file, $mappingCode)
+    public function createMapping(array $data)
     {
-        // 1. Cari aturan mapping berdasarkan kode
-        $mappingIndex = MappingIndex::with('columns')->where('code', $mappingCode)->first();
+        return DB::transaction(function () use ($data) {
+            
+            $indexData = Arr::only($data, ['description', 'table_name', 'division_id']);
+            $mappingIndex = MappingIndex::create($indexData);
 
-        if (!$mappingIndex) {
-            return ['success' => false, 'message' => 'Mapping dengan kode ' . $mappingCode . ' tidak ditemukan.'];
-        }
+            // --- BAGIAN YANG DIPERBAIKI ---
+            if (isset($data['columns']) && is_array($data['columns'])) {
+                $columnsToSave = [];
+                foreach ($data['columns'] as $column) {
+                    // Buat object Model baru, tapi jangan simpan dulu
+                    $columnsToSave[] = new MappingColumn($column); 
+                }
 
-        // 2. Baca file Excel
-        // Kita gunakan ToArrayable, header row diabaikan oleh library, kita handle manual.
-        $dataRows = Excel::toCollection(null, $file)[0]; // Ambil sheet pertama
-
-        // 3. Siapkan data untuk dimasukkan ke database
-        $dataToInsert = [];
-        $headerRowIndex = $mappingIndex->header_row - 1;
-
-        foreach ($dataRows as $index => $row) {
-            // Lewati baris header
-            if ($index < $headerRowIndex) {
-                continue;
+                // Simpan semua object kolom sekaligus menggunakan relasi
+                if (!empty($columnsToSave)) {
+                    $mappingIndex->columns()->saveMany($columnsToSave);
+                }
             }
+            // --- AKHIR BAGIAN ---
 
-            $rowData = [];
-            // 4. Lakukan mapping sesuai aturan di mapping_columns
-            foreach ($mappingIndex->columns as $columnMap) {
-                // Konversi 'A', 'B', 'C' menjadi index array 0, 1, 2
-                $excelColumnIndex = ord(strtoupper($columnMap->excel_column_index)) - ord('A');
+            return $mappingIndex;
+        });
+    }
 
-                if (isset($row[$excelColumnIndex])) {
-                    $rowData[$columnMap->table_column_name] = $row[$excelColumnIndex];
+    public function updateMapping(MappingIndex $mappingIndex, array $data)
+    {
+        return DB::transaction(function () use ($mappingIndex, $data) {
+            
+            $indexData = Arr::only($data, ['description', 'table_name']);
+            $mappingIndex->update($indexData);
+            
+            $mappingIndex->columns()->delete();
+            
+            if (isset($data['columns']) && is_array($data['columns'])) {
+                $columnsToSave = [];
+                foreach ($data['columns'] as $column) {
+                    $columnsToSave[] = new MappingColumn($column);
+                }
+
+                if (!empty($columnsToSave)) {
+                    $mappingIndex->columns()->saveMany($columnsToSave);
                 }
             }
 
-            if (!empty($rowData)) {
-                $dataToInsert[] = $rowData;
-            }
-        }
-
-        // 5. Simpan data ke tabel tujuan secara dinamis
-        if (!empty($dataToInsert)) {
-            DB::table($mappingIndex->table_name)->insert($dataToInsert);
-            return ['success' => true, 'message' => 'Berhasil mengimpor ' . count($dataToInsert) . ' baris data.'];
-        }
-
-        return ['success' => false, 'message' => 'Tidak ada data untuk diimpor.'];
+            return $mappingIndex->fresh('columns');
+        });
     }
 }
