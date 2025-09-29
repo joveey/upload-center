@@ -2,8 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\MappingController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\MappingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -11,19 +11,25 @@ use App\Http\Controllers\HomeController;
 |--------------------------------------------------------------------------
 */
 
-// Middleware 'auth' memastikan hanya user yang sudah login yang bisa mengakses halaman ini.
+// Rute untuk halaman selamat datang (welcome page) untuk tamu (belum login)
+Route::get('/', function () {
+    // Jika sudah login, redirect ke /home, jika belum, tampilkan welcome page.
+    if (Auth::check()) {
+        return redirect()->route('home');
+    }
+    return view('welcome');
+});
+
+// Menambahkan semua rute yang dibutuhkan untuk autentikasi (login, register, logout, dll.)
+Auth::routes();
+
+// --- GRUP UNTUK PENGGUNA YANG SUDAH LOGIN ---
 Route::middleware(['auth'])->group(function () {
 
-    // Halaman utama untuk menampilkan form upload
-    Route::get('/', [MappingController::class, 'showUploadForm'])->name('upload.form');
-
-    // Menangani proses upload file.
-    Route::post('/upload', [MappingController::class, 'handleUpload'])
-        ->name('upload.handle')
-        ->middleware('can:upload data');
+    // Ini akan menjadi halaman utama setelah login
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
 
     // Menampilkan halaman untuk mendaftarkan format baru.
-    // Changed from '/register' to '/register-format' to avoid conflict with Auth::routes()
     Route::get('/register-format', [MappingController::class, 'showRegisterForm'])
         ->name('register.form')
         ->middleware('can:register format');
@@ -33,10 +39,5 @@ Route::middleware(['auth'])->group(function () {
         ->name('register.store')
         ->middleware('can:register format');
 
+    // Anda bisa menambahkan rute lain yang memerlukan login di sini...
 });
-
-// Menambahkan semua route yang dibutuhkan untuk autentikasi (login, register, logout, dll.)
-Auth::routes();
-
-// Jika pengguna mengakses /home setelah login, arahkan ke halaman utama.
-Route::get('/home', [HomeController::class, 'index'])->name('home');

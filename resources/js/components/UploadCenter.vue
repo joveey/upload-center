@@ -6,11 +6,11 @@
                     <div class="card-header d-flex justify-content-between align-items-center">
                         Upload Center (Vue Version)
                         
-                        {{-- TOMBOL CREATE MAPPING --}}
+                        <!-- TOMBOL CREATE MAPPING -->
                         <button
                             v-if="canCreateMapping"
                             class="btn btn-sm btn-primary"
-                            @click="showMappingModal = true" {{-- Ganti dengan aksi yang sesuai --}}
+                            @click="showMappingModal = true"
                         >
                             Create Mapping
                         </button>
@@ -88,7 +88,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, defineProps } from 'vue'; // <-- Import defineProps
+import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 import { Modal } from 'bootstrap';
@@ -112,7 +112,7 @@ const isLoading = ref(false);
 const successMessage = ref('');
 const errorMessage = ref('');
 let modalInstance = null;
-const showMappingModal = ref(false); // State untuk modal create mapping
+const showMappingModal = ref(false);
 
 // Fetch initial mapping data
 onMounted(async () => {

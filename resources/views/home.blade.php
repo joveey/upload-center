@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container" id="app">
-    {{-- Komponen Vue dipanggil di sini dengan properti yang diperlukan --}}
-    <upload-center 
+<div id="app">
+    {{-- Komponen Vue akan di-mount di sini. Sesuaikan nama komponen jika berbeda. --}}
+    {{-- Pastikan nama komponen di sini sama dengan yang didaftarkan di resources/js/app.js --}}
+    <upload-center-component 
         :can-create-mapping="{{ auth()->user()->can('create mapping') ? 'true' : 'false' }}"
-    ></upload-center>
-    
+    ></upload-center-component>
 </div>
 @endsection
