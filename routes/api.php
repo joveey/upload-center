@@ -10,8 +10,9 @@ use App\Http\Controllers\MappingController;
 |--------------------------------------------------------------------------
 */
 
-// PENTING: Gunakan web middleware untuk session-based authentication
-Route::middleware(['web', 'auth'])->group(function () {
+// Middleware 'auth:sanctum' adalah cara yang benar untuk melindungi API
+// yang diakses oleh frontend SPA (seperti Vue) dalam proyek yang sama.
+Route::middleware('auth:sanctum')->group(function () {
     
     // Get list of mappings
     Route::get('/mappings', [MappingController::class, 'index']);
@@ -37,3 +38,8 @@ Route::middleware(['web', 'auth'])->group(function () {
     });
 
 });
+
+// Rute ini bisa dihapus jika tidak digunakan, karena sudah ada di dalam grup di atas
+// Route::get('/user', function (Request $request) {
+//     return $request->user();
+// })->middleware('auth:sanctum');

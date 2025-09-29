@@ -1,52 +1,49 @@
+/**
+ * We'll load the axios HTTP library which allows us to easily issue requests
+ * to our Laravel back-end. This library automatically handles sending the
+ * CSRF token as a header based on the value of the "XSRF" token cookie.
+ */
+
 import axios from 'axios';
 window.axios = axios;
 
-window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+window.axios.defaults.headers.common['X-Requested-with'] = 'XMLHttpRequest';
 
 /**
- * PENTING: Konfigurasi ini memastikan Axios mengirim cookies dan CSRF token
+ * Echo exposes an expressive API for subscribing to channels and listening
+ * for events that are broadcast by Laravel. Echo and event broadcasting
+ * allows your team to easily build robust real-time web applications.
  */
-window.axios.defaults.withCredentials = true;
-window.axios.defaults.withXSRFToken = true;
+
+// import Echo from 'laravel-echo';
+
+// import Pusher from 'pusher-js';
+// window.Pusher = Pusher;
+
+// window.Echo = new Echo({
+//     broadcaster: 'pusher',
+//     key: import.meta.env.VITE_PUSHER_APP_KEY,
+//     wsHost: import.meta.env.VITE_PUSHER_HOST ?? `ws-${import.meta.env.VITE_PUSHER_APP_CLUSTER}.pusher.com`,
+//     wsPort: import.meta.env.VITE_PUSHER_PORT ?? 80,
+//     wssPort: import.meta.env.VITE_PUSHER_PORT ?? 443,
+//     forceTLS: (import.meta.env.VITE_PUSHER_SCHEME ?? 'https') === 'https',
+//     enabledTransports: ['ws', 'wss'],
+// });
+
 
 /**
- * Set base URL
+ * ==================================================================
+ * KODE PERBAIKAN UNTUK ERROR 419 (CSRF TOKEN MISMATCH)
+ * ==================================================================
+ *
+ * Kode di bawah ini akan mengambil CSRF token dari <meta> tag di HTML
+ * dan secara otomatis melampirkannya sebagai header 'X-CSRF-TOKEN'
+ * pada setiap request yang dikirim melalui Axios.
  */
-window.axios.defaults.baseURL = window.location.origin;
-
-/**
- * Tambahkan CSRF token dari meta tag ke setiap request
- */
-let token = document.head.querySelector('meta[name="csrf-token"]');
+const token = document.head.querySelector('meta[name="csrf-token"]');
 
 if (token) {
     window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
 } else {
     console.error('CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token');
 }
-
-/**
- * Add request interceptor untuk debugging
- */
-window.axios.interceptors.request.use(
-    config => {
-        console.log('Making request to:', config.url);
-        console.log('Request headers:', config.headers);
-        return config;
-    },
-    error => {
-        console.error('Request error:', error);
-        return Promise.reject(error);
-    }
-);
-
-/**
- * Add response interceptor untuk error handling
- */
-window.axios.interceptors.response.use(
-    response => response,
-    error => {
-        console.error('Response error:', error.response);
-        return Promise.reject(error);
-    }
-);
