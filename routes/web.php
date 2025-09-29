@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\MappingController;
-use App\Http\Controllers\HomeController; // Tambahkan ini untuk kerapian
+use App\Http\Controllers\HomeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,12 +23,13 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('can:upload data');
 
     // Menampilkan halaman untuk mendaftarkan format baru.
-    Route::get('/register', [MappingController::class, 'showRegisterForm'])
+    // Changed from '/register' to '/register-format' to avoid conflict with Auth::routes()
+    Route::get('/register-format', [MappingController::class, 'showRegisterForm'])
         ->name('register.form')
         ->middleware('can:register format');
 
     // Menyimpan data dari form pendaftaran format baru.
-    Route::post('/register', [MappingController::class, 'storeRegisterForm'])
+    Route::post('/register-format', [MappingController::class, 'storeRegisterForm'])
         ->name('register.store')
         ->middleware('can:register format');
 
