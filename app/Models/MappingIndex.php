@@ -4,31 +4,31 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany; // <-- Pastikan ini di-import
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MappingIndex extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'code',
         'description',
         'table_name',
+        'header_row',
         'division_id',
-        'code', // Jika ada
     ];
 
-    /**
-     * Mendefinisikan relasi One-to-Many ke MappingColumn.
-     */
-    public function columns(): HasMany // <-- Tambahkan return type hint
+    protected $casts = [
+        'header_row' => 'integer',
+    ];
+
+    public function columns(): HasMany
     {
         return $this->hasMany(MappingColumn::class, 'mapping_index_id');
     }
 
-    /**
-     * Relasi ke Division
-     */
-    public function division()
+    public function division(): BelongsTo
     {
         return $this->belongsTo(Division::class);
     }

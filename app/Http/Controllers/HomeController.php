@@ -8,21 +8,20 @@ class HomeController extends Controller
 {
     /**
      * Create a new controller instance.
-     *
-     * @return void
      */
     public function __construct()
     {
-        $this->middleware('auth');
+        $this->middleware('auth'); // user wajib login
     }
 
     /**
      * Show the application dashboard.
-     *
-     * @return \Illuminate\Contracts\Support\Renderable
      */
     public function index()
     {
-        return view('home');
+        // kirim data permission ke view
+        return view('home', [
+            'canCreateMapping' => auth()->check() && auth()->user()->can('create mapping'),
+        ]);
     }
 }

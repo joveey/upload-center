@@ -6,17 +6,11 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreMappingRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return $this->user()->can('create mapping');
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     */
     public function rules(): array
     {
         return [
@@ -32,12 +26,10 @@ class StoreMappingRequest extends FormRequest
         ];
     }
 
-    /**
-     * Get custom messages for validator errors.
-     */
     public function messages(): array
     {
         return [
+            'code.required' => 'Mapping code is required.',
             'code.unique' => 'This mapping code already exists.',
             'columns.required' => 'At least one column mapping is required.',
             'columns.*.excel_column_index.required' => 'Excel column index is required for all columns.',
