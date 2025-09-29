@@ -9,6 +9,13 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * @method bool can(string $permission)
+ * @method bool hasRole(string|array $roles)
+ * @method bool hasAnyRole(string|array $roles)
+ * @method void assignRole(string|array $roles)
+ * @property int|null $division_id
+ */
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -23,6 +30,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'division_id', // Tambahkan ini
     ];
 
     /**
@@ -46,5 +54,13 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Relasi ke Division
+     */
+    public function division()
+    {
+        return $this->belongsTo(Division::class);
     }
 }

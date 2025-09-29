@@ -4,8 +4,18 @@ window.axios = axios;
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 /**
- * Baris di bawah ini adalah kunci untuk autentikasi Sanctum SPA.
- * Ini memberitahu Axios untuk secara otomatis mengirim cookie session
- * setiap kali membuat request ke backend Anda.
+ * PENTING: Konfigurasi ini memastikan Axios mengirim cookies dan CSRF token
  */
 window.axios.defaults.withCredentials = true;
+window.axios.defaults.withXSRFToken = true;
+
+/**
+ * Tambahkan CSRF token dari meta tag ke setiap request
+ */
+let token = document.head.querySelector('meta[name="csrf-token"]');
+
+if (token) {
+    window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
+} else {
+    console.error('CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token');
+}

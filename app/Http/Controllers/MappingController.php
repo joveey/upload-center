@@ -14,7 +14,8 @@ class MappingController extends Controller
 
     public function __construct(MappingService $mappingService)
     {
-        $this->middleware('auth')->except(['getMappings', 'handleUpload']);
+        // Pastikan semua method menggunakan auth middleware
+        $this->middleware('auth');
         $this->mappingService = $mappingService;
     }
 
@@ -41,15 +42,19 @@ class MappingController extends Controller
         ]);
         
         DB::transaction(function () use ($request) {
-            /** @var \App\Models\User $user */
+            /** @var \App\Models\User|null $user */
             $user = auth()->user();
+            
+            if (!$user) {
+                abort(401, 'Unauthorized');
+            }
 
             $mappingIndex = MappingIndex::create([
                 'code' => $request->code,
                 'description' => $request->description,
                 'table_name' => $request->table_name,
                 'header_row' => $request->header_row,
-                'division_id' => $user->division_id,
+                'division_id' => $user->division_id ?? null,
                 'created_by_user_id' => $user->id,
             ]);
 
@@ -73,16 +78,42 @@ class MappingController extends Controller
         /** @var \App\Models\User|null $user */
         $user = Auth::user(); 
         
+        // Debug logging
+        \Log::info('getMappings called', [
+            'user' => $user ? $user->id : 'null',
+            'auth_check' => Auth::check(),
+            'session_id' => request()->session()->getId(),
+        ]);
+        
         if (!$user) {
-            return response()->json(['message' => 'Unauthenticated.'], 401);
+            return response()->json([
+                'message' => 'Unauthenticated.',
+                'debug' => [
+                    'auth_check' => Auth::check(),
+                    'has_session' => request()->hasSession(),
+                ]
+            ], 401);
         }
         
         $query = MappingIndex::with(['columns', 'division']);
 
         // LOGIKA BARU: Jika user TIDAK BISA 'view all formats',
         // maka filter berdasarkan divisinya.
-        if (!$user->can('view all formats')) {
-            $query->where('division_id', $user->division_id);
+        try {
+            // Check jika user punya permission 'view all formats'
+            $canViewAll = method_exists($user, 'can') ? $user->can('view all formats') : false;
+            
+            if (!$canViewAll) {
+                if ($user->division_id) {
+                    $query->where('division_id', $user->division_id);
+                }
+            }
+        } catch (\Exception $e) {
+            // Jika terjadi error saat check permission, return semua data saja
+            // atau bisa di-filter by division jika ada
+            if (isset($user->division_id) && $user->division_id) {
+                $query->where('division_id', $user->division_id);
+            }
         }
 
         return $query->get();

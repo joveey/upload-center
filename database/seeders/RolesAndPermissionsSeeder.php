@@ -17,20 +17,21 @@ class RolesAndPermissionsSeeder extends Seeder
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         // --- BUAT SEMUA IZIN (PERMISSIONS) ---
-        Permission::create(['name' => 'register format']); // Izin untuk membuat format baru
-        Permission::create(['name' => 'upload data']);     // Izin untuk mengunggah data
-        Permission::create(['name' => 'view all formats']);// Izin KHUSUS untuk melihat semua format dari semua divisi
+        // Gunakan firstOrCreate agar tidak error jika sudah ada
+        Permission::firstOrCreate(['name' => 'register format']);
+        Permission::firstOrCreate(['name' => 'upload data']);
+        Permission::firstOrCreate(['name' => 'view all formats']);
 
         // --- BUAT PERAN (ROLES) ---
 
         // 1. Peran untuk Pengguna Divisi (misal: Finance, Logistik, dll.)
-        // Mereka bisa membuat format dan mengunggah data untuk divisinya.
-        $divisionUserRole = Role::create(['name' => 'division-user']);
-        $divisionUserRole->givePermissionTo(['register format', 'upload data']);
+        $divisionUserRole = Role::firstOrCreate(['name' => 'division-user']);
+        $divisionUserRole->syncPermissions(['register format', 'upload data']);
 
         // 2. Peran untuk Super Admin
-        // Dia bisa melakukan segalanya, termasuk melihat semua format.
-        $superAdminRole = Role::create(['name' => 'super-admin']);
-        $superAdminRole->givePermissionTo(Permission::all());
+        $superAdminRole = Role::firstOrCreate(['name' => 'super-admin']);
+        $superAdminRole->syncPermissions(Permission::all());
+
+        echo "Roles and permissions seeded successfully!\n";
     }
 }
